@@ -82,20 +82,41 @@ Before doing anything, verify Chrome DevTools MCP is available:
 ```
 Chrome DevTools MCP 尚未連線。請用以下指令安裝：
 
-Claude Code:
   claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest
 
-或在 MCP 設定檔加入：
-  {
-    "mcpServers": {
-      "chrome-devtools": {
-        "command": "npx",
-        "args": ["-y", "chrome-devtools-mcp@latest"]
-      }
-    }
-  }
+安裝後重啟 Claude Code（輸入 /quit 再重新啟動）。
+```
 
-安裝後重啟 agent，MCP 會自動啟動 Chrome。
+3. If `list_pages` succeeds → proceed.
+
+### Handling Cloudflare / Login Issues
+
+When navigating to CCU websites, if `take_snapshot` shows a Cloudflare verification page or CAPTCHA:
+
+1. **First, tell the user to manually complete the verification** in the Chrome window that MCP opened:
+```
+Chrome 被 Cloudflare 擋住了，請到 MCP 開的 Chrome 視窗手動完成驗證。
+完成後跟我說，我會繼續。
+```
+
+2. Use `wait_for` or simply wait for the user to confirm, then `take_snapshot` again.
+
+3. **If Cloudflare keeps blocking** (repeated failures), guide the user to switch to debug mode:
+```
+Cloudflare 一直擋，建議改用你自己的 Chrome：
+
+1. 關掉所有 Chrome 視窗
+2. 用以下指令開 Chrome（開新終端機視窗跑）：
+   Windows:  "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%HOMEPATH%\.chrome-debug-profile"
+   Mac:      /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.chrome-debug-profile"
+
+3. 在那個 Chrome 裡手動登入 eCourse2
+4. 回到 Claude Code 跑這行切換連線方式：
+   claude mcp remove chrome-devtools
+   claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest --browserUrl=http://127.0.0.1:9222
+5. 重啟 Claude Code，再打 /ccu
+
+這樣之後都不會再被擋了，登入狀態也會保留。
 ```
 
 3. If `list_pages` succeeds → proceed.
