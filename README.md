@@ -9,105 +9,117 @@ An AI assistant for CCU students. It drives Chrome to fetch data from eCourse2 (
 - 同步 eCourse2 上的課程、公告、作業、成績
 - 下載講義和簡報
 - 從 iCCU 抓課表、歷年成績
-- 查 eCourse2 通知（取代 email）
-- 查開課資料
+- 查 eCourse2 通知
+- 查開課資料 / 課程大綱
+- 請假
 - 整理完的資料可以做成一頁式網頁
 
-## 裝之前
+## 安裝（三步）
 
-1. [Node.js](https://nodejs.org/) v20+
-2. 一個支援 [skills](https://skills.sh) 的 AI 工具（Claude Code、Codex、Cursor 都行）
-3. 讓 AI 可以操作 Chrome：
+### 1. 裝 Claude Code
+
+需要 [Node.js](https://nodejs.org/) v20+
 
 ```bash
-claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest
+npm install -g @anthropic-ai/claude-code
 ```
 
-用的時候它會自己開 Chrome，不用手動。
+### 2. 設定 Chrome 連線
 
-<details>
-<summary>其他工具的設定</summary>
+在 Claude Code 裡跑：
 
-在 MCP 設定檔加：
+```
+claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest --browserUrl=http://127.0.0.1:9222
+```
+
+如果上面指令報錯，手動編輯 `~/.claude.json`，在 `mcpServers` 裡加入：
 
 ```json
-{
-  "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
-    }
-  }
+"chrome-devtools": {
+  "command": "npx",
+  "args": [
+    "chrome-devtools-mcp@latest",
+    "--browserUrl=http://127.0.0.1:9222"
+  ]
 }
 ```
 
-</details>
-
-## 安裝
-
-```bash
-npx skills add febsi29/ccu
-```
-
-過程中問的問題，**全部按 Enter** 就好。
-
-更新：`npx skills update`
-
-<details>
-<summary>手動裝</summary>
+### 3. 裝 Skill
 
 ```bash
 git clone https://github.com/febsi29/ccu.git ~/.claude/skills/ccu
 ```
 
+完成！
+
+## 使用方式
+
+每次用就兩步：
+
+### Step 1：開 Chrome
+
+雙擊 repo 裡附的啟動腳本：
+
+- **Windows**：`start-chrome.bat`
+- **Mac**：`start-chrome.sh`
+
+Chrome 會開啟並跳到 eCourse2。**第一次需要手動登入，之後都會記住。**
+
+<details>
+<summary>沒有腳本？手動開也行</summary>
+
+先關掉所有 Chrome，然後開終端機跑：
+
+Windows:
+```
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%HOMEPATH%\.chrome-ccu-profile" https://ecourse2.ccu.edu.tw
+```
+
+Mac:
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --remote-debugging-port=9222 --user-data-dir="$HOME/.chrome-ccu-profile" https://ecourse2.ccu.edu.tw &
+```
+
 </details>
 
-## 用法
+### Step 2：開 Claude Code
 
-輸入 `/ccu`，它會列出能做的事讓你選。也可以直接講：
+```bash
+claude
+```
+
+然後輸入：
 
 ```
 /ccu
-/ccu 幫我下載所有課程教材
-/ccu 整理課表和近期作業
-/ccu 這週有什麼作業？
-/ccu 幫我看成績
-/ccu Download all course materials
-/ccu What's due this week?
 ```
 
-第一次用會開 Chrome 處理登入。你可以給帳密讓它填，或自己在 Chrome 登好再告訴它。登一次就夠了，CCU 各系統共用 SSO。
+它會列出能做的事讓你選。也可以直接講：
+
+```
+/ccu 這週有什麼作業？
+/ccu 幫我下載所有課程教材
+/ccu 整理課表和近期作業
+/ccu 幫我看成績
+/ccu 請假
+```
+
+## 為什麼要先開 Chrome？
+
+CCU 的網站有 Cloudflare 防護，會擋掉自動化工具開的瀏覽器。用你自己開的 Chrome 就不會被擋，而且登入狀態會保留。
 
 ## ⚠️ 注意事項
 
-- 部分系統（如 iCCU 選課系統）可能限校內網路，請確認有連上中正校園網路或 VPN
-- eCourse2 的 Moodle Web Service API 已被學校關閉，所有資料透過瀏覽器頁面解析抓取
-- 同步多門課程時需要逐頁瀏覽，8 門課完整同步約需 2-5 分鐘
-
-<details>
-<summary>如果一直被 Cloudflare 擋怎麼辦？</summary>
-
-改用自己的 Chrome，不讓 MCP 自己開：
-
-1. 關掉所有 Chrome
-2. 開終端機，用以下指令啟動 Chrome：
-   - Windows: `"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%HOMEPATH%\.chrome-debug-profile"`
-   - Mac: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.chrome-debug-profile"`
-3. 在那個 Chrome 裡手動登入 eCourse2
-4. 改 MCP 設定：
-   ```
-   claude mcp remove chrome-devtools
-   claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest --browserUrl=http://127.0.0.1:9222
-   ```
-5. 重啟 Claude Code，打 `/ccu`
-
-這樣 Chrome 的登入狀態會保留，不用每次重新登入。
-
-</details>
+- 使用前請先關掉其他 Chrome 視窗，再用腳本開
+- 部分系統（如 iCCU）可能限校內網路，請確認有連上中正校園網路或 VPN
+- 同步多門課程時需要逐頁瀏覽，8 門課完整同步約需 3-5 分鐘
+- eCourse2 的 Moodle API 已被學校關閉，所有資料透過瀏覽器頁面解析
 
 ## 安全
 
-帳密只用來當場填入登入表單，不存。資料都在你電腦上。
+- 帳密只用來當場填入登入表單，不存
+- 所有資料都在你電腦上
+- Chrome 的 debug port 只開在本機（127.0.0.1），外部無法連入
 
 ## 致謝
 
