@@ -129,6 +129,15 @@ URL: `https://www026186.ccu.edu.tw/stu_off/`
 - Can help fill leave application forms if user asks
 - **Never auto-submit** — always confirm with the user before submitting any leave request
 
+## 在學證明
+
+URL: `https://www026198.ccu.edu.tw/academic/academic-login.php`
+
+- Uses CCU SSO
+- Use `take_snapshot` after login to navigate the interface
+- Can help the user find and download enrollment certificates (在學證明)
+- May require campus network
+
 ## 課程地圖
 
 URL: `https://www026158.ccu.edu.tw/all_dept_list.php`
