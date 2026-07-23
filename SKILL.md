@@ -45,7 +45,7 @@ Wait for the user to pick, then execute accordingly. Adapt the language to match
 ## Core Principles
 
 1. **Language mirrors the user** — detect conversation language and match it for all output.
-2. **Login flexibility** — if user is not logged in, ask if they want to provide credentials (fill the login form via Chrome MCP) or log in manually. Never store credentials beyond the immediate login action.
+2. **Manual login only** — if the user is not logged in, pause and ask them to sign in directly inside Chrome. Never request, receive, fill, copy, or store credentials.
 3. **SSO = login once** — CCU systems share SSO via CAS (`cas.ccu.edu.tw`). Once logged into one system (e.g., eCourse2), most other systems (iCCU, etc.) will already be authenticated.
 4. **Go where the data is** — don't visit every system. Read the routing table below and only navigate to the site that has what the user needs.
 5. **DOM-based extraction** — eCourse2's Moodle Web Service is disabled. Use `take_snapshot` + parse accessibility tree for all systems. Use `evaluate_script` only when needed for specific page interactions.
@@ -100,12 +100,12 @@ CCU uses CAS SSO (`cas.ccu.edu.tw`). Login strategy:
 
 1. Navigate to the target system URL.
 2. `take_snapshot` — check if logged in (look for user name, dashboard content) or on login page (CAS login form).
-3. If not logged in, offer the user two options:
-   - **Option A:** "要不要給我帳密？我幫你登入" — use `fill` + `click` to submit the CAS SSO form
-   - **Option B:** "或你自己在 Chrome 登入，好了告訴我" — `wait_for` login to complete
-4. Once logged in via SSO, other CCU systems should be authenticated too.
+3. If not logged in, say: "請在 Chrome 視窗中自行登入；完成後告訴我，我會繼續。"
+4. Wait for the user to confirm that login is complete, then take a fresh snapshot.
+5. Once logged in via SSO, other CCU systems should be authenticated too.
 
-Never store credentials. Use them only for the immediate `fill` action.
+Never ask the user to paste a username, password, one-time code, recovery code,
+or session token into chat. Never use browser tools to read saved passwords.
 
 ## eCourse2 (Moodle LMS)
 
@@ -249,7 +249,7 @@ After generating markdown files, ask the user: "要不要幫你做一個好看�
 | Scenario | Detection | Response |
 |----------|-----------|----------|
 | Chrome MCP not connected | `list_pages` fails | Install guide (Phase 0) |
-| Not logged in | CAS login page in snapshot | Offer credentials or manual login |
+| Not logged in | CAS login page in snapshot | Pause for manual login in Chrome |
 | SSO session expired | 401 or redirect to CAS | Re-login (same options) |
 | 0 active courses | Empty API response | "目前沒有進行中的課程" |
 | System under maintenance | Maintenance page in snapshot | Inform user, skip |
